@@ -1,66 +1,74 @@
-#include <ServoTimer2.h>
-#include <RH_ASK.h>
-#include <SPI.h>
+#include "WifiPort2.h"
+#include <Servo.h>
 
-ServoTimer2 mg996r;
-
+// ----- Servo Setup -----
+Servo mg996r;
 const int SERVO_PIN = 3;
-const int RX_PIN = 12;
+const int SERVO_MAX_ANGLE = 50; // Max angle
+const int SERVO_HOME_ANGLE = 0; // Home position
 
-// ServoTimer2 uses microseconds (750-2250 range typical)
-const int SERVO_ANGLE_US = 1500;  // ~45 degrees
-const int HOME_ANGLE_US = 750;    // ~0 degrees
-
+// ----- Servo Timing -----
 const unsigned long PRESS_TIMEOUT = 250;
 unsigned long lastPressTime = 0;
 bool pressed = false;
 
-RH_ASK rf_driver(4000, RX_PIN, 255, -1, false);
+// ----- Wifi / DataPacket -----
+struct DataPacket {
+  int AnalogCheck;      // Debug / timestamp
+  bool ButtonPressed;   // Only button in packet
+} data;
 
-const char VALID_MSG[] = "Group170Press";
-const uint8_t VALID_LEN = 13;
+WifiPort<DataPacket> WifiSerial;
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println("RF Servo Controller Starting");
-  
-  // Initialize servo
+  Serial.begin(115200);
+  Serial.println("WiFi Servo Controller Starting");
+
+  // Servo initialization
   mg996r.attach(SERVO_PIN);
-  mg996r.write(HOME_ANGLE_US);
+  mg996r.write(SERVO_HOME_ANGLE);
   Serial.println("Servo at HOME");
   delay(500);
-  
-  // Initialize RF receiver
-  if (!rf_driver.init()) {
-    Serial.println("RF init FAILED!");
-  } else {
-    Serial.println("RF receiver ready");
-  }
+
+  // WiFi initialization as receiver
+  WifiSerial.begin("group170dropper", "dropperYeah", WifiPortType::Receiver);
+  Serial.println("WiFi receiver ready");
 }
 
 void loop() {
-  uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
-  uint8_t buflen = sizeof(buf);
+  // Keep connection alive
+  WifiSerial.autoReconnect();
 
-  if (rf_driver.recv(buf, &buflen)) {
-    
-    // ONLY act on EXACT match - ignore everything else
-    if (buflen == VALID_LEN && memcmp(buf, VALID_MSG, VALID_LEN) == 0) {
-      
+  // Update debug variable
+  data.AnalogCheck = millis();
+
+  // Check for incoming data
+  if (WifiSerial.checkForData()) {
+    data = WifiSerial.getData();
+
+    // ----- Servo actuation -----
+    if (data.ButtonPressed) {
       if (!pressed) {
         Serial.println(">>> PRESS");
-        mg996r.write(SERVO_ANGLE_US);
+        mg996r.write(SERVO_MAX_ANGLE); // Move to max angle
       }
-      
       lastPressTime = millis();
       pressed = true;
     }
-  }
 
-  // Auto-return to home
-  if (pressed && (millis() - lastPressTime > PRESS_TIMEOUT)) {
-    Serial.println(">>> HOME");
-    mg996r.write(HOME_ANGLE_US);
-    pressed = false;
+    // Auto-return to home
+    if (pressed && (millis() - lastPressTime > PRESS_TIMEOUT)) {
+      Serial.println(">>> HOME");
+      mg996r.write(SERVO_HOME_ANGLE);
+      pressed = false;
+    }
+
+    // ----- Debug output -----
+    Serial.print("ButtonPressed: ");
+    Serial.print(data.ButtonPressed);
+    Serial.print(" | AnalogCheck: ");
+    Serial.println(data.AnalogCheck);
+
+    delay(10);
   }
 }
