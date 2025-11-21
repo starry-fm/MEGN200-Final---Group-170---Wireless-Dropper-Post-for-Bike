@@ -38,19 +38,22 @@ float humidity = 0;
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("RF Transmitter with DHT11 Starting");
+  delay(1000);  // Wait for Serial
+  Serial.println("\n\n=== RF Transmitter Starting ===");
   
   // Initialize button
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  Serial.println("Button initialized on pin 3");
   
   // Initialize DHT11
   dht.begin();
+  Serial.println("DHT11 initialized on pin 2");
   
   // Initialize OLED
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println("OLED init failed!");
+    Serial.println("ERROR: OLED init failed!");
   } else {
-    Serial.println("OLED ready");
+    Serial.println("OLED ready (I2C 0x3C)");
   }
   
   display.clearDisplay();
@@ -64,22 +67,38 @@ void setup() {
   
   // Initialize RF transmitter
   if (!rf_driver.init()) {
-    Serial.println("RF init FAILED!");
+    Serial.println("ERROR: RF init FAILED!");
   } else {
-    Serial.println("RF transmitter ready");
+    Serial.println("RF transmitter ready on pin 12");
   }
+  
+  Serial.println("=================================");
+  Serial.println("System ready. Press button...\n");
 }
 
 void loop() {
+  static unsigned long loopCount = 0;
+  loopCount++;
+  
+  // Show heartbeat every 10 seconds
+  static unsigned long lastHeartbeat = 0;
+  if (millis() - lastHeartbeat > 10000) {
+    Serial.print("Running... (loops: ");
+    Serial.print(loopCount);
+    Serial.println(")");
+    lastHeartbeat = millis();
+  }
+  
   // Read DHT11 sensor periodically
   if (millis() - lastSensorRead > SENSOR_INTERVAL) {
+    Serial.println("Reading DHT11...");
     humidity = dht.readHumidity();
     temperature = dht.readTemperature();
     
     if (isnan(humidity) || isnan(temperature)) {
-      Serial.println("DHT11 read failed!");
+      Serial.println("  ERROR: DHT11 read failed!");
     } else {
-      Serial.print("Temp: ");
+      Serial.print("  Temp: ");
       Serial.print(temperature);
       Serial.print("°C, Humidity: ");
       Serial.print(humidity);
@@ -96,20 +115,24 @@ void loop() {
   if (buttonState == LOW && lastButtonState == HIGH) {
     if (millis() - lastDebounceTime > DEBOUNCE_DELAY) {
       
-      Serial.println("Button pressed - sending message");
+      Serial.println("\n*** BUTTON PRESSED ***");
+      Serial.print("Sending message: ");
+      Serial.println(MSG);
       updateDisplay(true);
       
       // Send message multiple times for reliability
       for (int i = 0; i < 5; i++) {
         rf_driver.send((uint8_t*)MSG, MSG_LEN);
         rf_driver.waitPacketSent();
+        Serial.print("  Sent packet ");
+        Serial.println(i + 1);
         delay(10);
       }
       
-      Serial.println("Message sent");
+      Serial.println("*** MESSAGE SENT ***\n");
       lastDebounceTime = millis();
       
-      delay(200);  // Show "SENT" message briefly
+      delay(200);
       updateDisplay(false);
     }
   }
