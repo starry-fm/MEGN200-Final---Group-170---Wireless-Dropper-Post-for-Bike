@@ -1,183 +1,90 @@
-#include <RH_ASK.h>
-#include <SPI.h>
-#include <DHT.h>
+#include "WifiPort2.h"
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "DHT.h"
 
-// Pin definitions
-const int BUTTON_PIN = 3;
-const int DHT_PIN = 2;
-const int TX_PIN = 12;
+// ----- WiFi / DataPacket -----
+struct DataPacket {
+  int AnalogCheck;     // debug / timestamp
+  bool ButtonPressed;  // button state
+} data;
 
-// DHT11 sensor
+WifiPort<DataPacket> WifiSerial;
+
+// ----- Pins -----
+const int buttonPin = 3;
+const int DHTPin = 2;
 #define DHTTYPE DHT11
-DHT dht(DHT_PIN, DHTTYPE);
 
-// OLED display (128x64)
+// ----- DHT Sensor -----
+DHT dht(DHTPin, DHTTYPE);
+
+// ----- OLED Display -----
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// RF transmitter
-RH_ASK rf_driver(4000, -1, TX_PIN, -1, false);
-
-const char MSG[] = "Group170Press";
-const uint8_t MSG_LEN = 13;
-
-bool lastButtonState = HIGH;
-unsigned long lastDebounceTime = 0;
-const unsigned long DEBOUNCE_DELAY = 50;
-
-unsigned long lastSensorRead = 0;
-const unsigned long SENSOR_INTERVAL = 2000;  // Read every 2 seconds
-
-float temperature = 0;
-float humidity = 0;
+// ----- Variables -----
+bool lastButtonState = false;
 
 void setup() {
-  Serial.begin(9600);
-  delay(1000);  // Wait for Serial
-  Serial.println("\n\n=== RF Transmitter Starting ===");
-  
+  Serial.begin(115200);
+
   // Initialize button
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  Serial.println("Button initialized on pin 3");
-  
-  // Initialize DHT11
+  pinMode(buttonPin, INPUT_PULLUP);
+
+  // Initialize DHT
   dht.begin();
-  Serial.println("DHT11 initialized on pin 2");
-  
+
   // Initialize OLED
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println("ERROR: OLED init failed!");
-  } else {
-    Serial.println("OLED ready (I2C 0x3C)");
+    Serial.println(F("SSD1306 allocation failed"));
+    while (1);
   }
-  
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
-  display.println("RF Transmitter");
-  display.println("Ready!");
-  display.display();
-  delay(1000);
-  
-  // Initialize RF transmitter
-  if (!rf_driver.init()) {
-    Serial.println("ERROR: RF init FAILED!");
-  } else {
-    Serial.println("RF transmitter ready on pin 12");
-  }
-  
-  Serial.println("=================================");
-  Serial.println("System ready. Press button...\n");
+
+  // Initialize WiFi as transmitter
+  WifiSerial.begin("group170dropper", "dropperYeah", WifiPortType::Transmitter);
+  Serial.println("WiFi transmitter ready");
 }
 
 void loop() {
-  static unsigned long loopCount = 0;
-  loopCount++;
-  
-  // Show heartbeat every 10 seconds
-  static unsigned long lastHeartbeat = 0;
-  if (millis() - lastHeartbeat > 10000) {
-    Serial.print("Running... (loops: ");
-    Serial.print(loopCount);
-    Serial.println(")");
-    lastHeartbeat = millis();
-  }
-  
-  // Read DHT11 sensor periodically
-  if (millis() - lastSensorRead > SENSOR_INTERVAL) {
-    Serial.println("Reading DHT11...");
-    humidity = dht.readHumidity();
-    temperature = dht.readTemperature();
-    
-    if (isnan(humidity) || isnan(temperature)) {
-      Serial.println("  ERROR: DHT11 read failed!");
-    } else {
-      Serial.print("  Temp: ");
-      Serial.print(temperature);
-      Serial.print("°C, Humidity: ");
-      Serial.print(humidity);
-      Serial.println("%");
-    }
-    
-    updateDisplay(false);
-    lastSensorRead = millis();
-  }
-  
-  // Check button
-  int buttonState = digitalRead(BUTTON_PIN);
-  
-  if (buttonState == LOW && lastButtonState == HIGH) {
-    if (millis() - lastDebounceTime > DEBOUNCE_DELAY) {
-      
-      Serial.println("\n*** BUTTON PRESSED ***");
-      Serial.print("Sending message: ");
-      Serial.println(MSG);
-      updateDisplay(true);
-      
-      // Send message multiple times for reliability
-      for (int i = 0; i < 5; i++) {
-        rf_driver.send((uint8_t*)MSG, MSG_LEN);
-        rf_driver.waitPacketSent();
-        Serial.print("  Sent packet ");
-        Serial.println(i + 1);
-        delay(10);
-      }
-      
-      Serial.println("*** MESSAGE SENT ***\n");
-      lastDebounceTime = millis();
-      
-      delay(200);
-      updateDisplay(false);
-    }
-  }
-  
-  lastButtonState = buttonState;
-  delay(10);
-}
+  // Update debug variable
+  data.AnalogCheck = millis();
 
-void updateDisplay(bool sending) {
+  // ----- Button handling -----
+  bool buttonState = !digitalRead(buttonPin); // pressed = HIGH
+  if (buttonState != lastButtonState) {
+    data.ButtonPressed = buttonState;
+    lastButtonState = buttonState;
+    Serial.print("ButtonPressed: "); Serial.println(data.ButtonPressed);
+  }
+
+  // ----- Send data over WifiPort2 -----
+  if (!WifiSerial.sendData(data)) {
+    Serial.println("WiFi Send Problem");
+  }
+
+  // ----- Read DHT11 -----
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+
+  // ----- Update OLED -----
   display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  
-  // Title
   display.setCursor(0, 0);
-  display.println("RF Transmitter");
-  display.println("---------------");
-  
-  // Temperature and Humidity
-  display.setCursor(0, 20);
   display.print("Temp: ");
-  if (!isnan(temperature)) {
-    display.print(temperature, 1);
-    display.println(" C");
-  } else {
-    display.println("--");
-  }
-  
-  display.setCursor(0, 32);
-  display.print("Humid: ");
-  if (!isnan(humidity)) {
-    display.print(humidity, 1);
-    display.println(" %");
-  } else {
-    display.println("--");
-  }
-  
-  // Status message
-  display.setCursor(0, 50);
-  if (sending) {
-    display.setTextSize(2);
-    display.println("SENT!");
-  } else {
-    display.println("Press button...");
-  }
-  
+  if (isnan(temp)) display.print("Err"); else display.print(temp);
+  display.println(" C");
+
+  display.print("Humidity: ");
+  if (isnan(hum)) display.print("Err"); else display.print(hum);
+  display.println(" %");
+
   display.display();
+
+  delay(200); // small delay for sensor and OLED
 }
