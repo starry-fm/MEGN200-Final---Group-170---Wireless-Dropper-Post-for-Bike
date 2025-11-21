@@ -28,6 +28,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // ----- Variables -----
 bool lastButtonState = false;
+bool signalSent = false;
 
 void setup() {
   Serial.begin(115200);
@@ -65,7 +66,8 @@ void loop() {
   }
 
   // ----- Send data over WifiPort2 -----
-  if (!WifiSerial.sendData(data)) {
+  signalSent = WifiSerial.sendData(data);
+  if (!signalSent) {
     Serial.println("WiFi Send Problem");
   }
 
@@ -83,6 +85,14 @@ void loop() {
   display.print("Humidity: ");
   if (isnan(hum)) display.print("Err"); else display.print(hum);
   display.println(" %");
+
+  // ----- Button / Signal Indicator -----
+  display.setCursor(0, 50);
+  display.print("Button: ");
+  display.println(data.ButtonPressed ? "ON" : "OFF");
+
+  display.print("Signal: ");
+  display.println(signalSent ? "OK" : "FAIL");
 
   display.display();
 
