@@ -4,29 +4,29 @@
 #include <Adafruit_SSD1306.h>
 #include "DHT.h"
 
-// ----- WiFi / DataPacket -----
+//WiFi / DataPacket
 struct DataPacket {
-  int AnalogCheck;     // debug / timestamp
-  bool ButtonPressed;  // button state
+  int AnalogCheck;     
+  bool ButtonPressed; 
 } data;
 
 WifiPort<DataPacket> WifiSerial;
 
-// ----- Pins -----
+// Pins
 const int buttonPin = 3;
 const int DHTPin = 2;
 #define DHTTYPE DHT11
 
-// ----- DHT Sensor -----
+//DHT Sensor
 DHT dht(DHTPin, DHTTYPE);
 
-// ----- OLED Display -----
+//OLED Display
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// ----- Variables -----
+// Variables
 bool lastButtonState = false;
 bool signalSent = false;
 
@@ -54,28 +54,27 @@ void setup() {
 }
 
 void loop() {
-  // Update debug variable
   data.AnalogCheck = millis();
 
-  // ----- Button handling -----
-  bool buttonState = !digitalRead(buttonPin); // pressed = HIGH
+  // Button handling
+  bool buttonState = !digitalRead(buttonPin); // pressed = HIGH, AI cleaned up code here
   if (buttonState != lastButtonState) {
     data.ButtonPressed = buttonState;
     lastButtonState = buttonState;
     Serial.print("ButtonPressed: "); Serial.println(data.ButtonPressed);
   }
 
-  // ----- Send data over WifiPort2 -----
+  // Send data over WifiPort2
   signalSent = WifiSerial.sendData(data);
   if (!signalSent) {
     Serial.println("WiFi Send Problem");
   }
 
-  // ----- Read DHT11 -----
+  // Read DHT11
   float temp = dht.readTemperature();
   float hum = dht.readHumidity();
 
-  // ----- Update OLED -----
+  // Update OLED
   display.clearDisplay();
   display.setCursor(0, 0);
   display.print("Temp: ");
@@ -86,15 +85,16 @@ void loop() {
   if (isnan(hum)) display.print("Err"); else display.print(hum);
   display.println(" %");
 
-  // ----- Button / Signal Indicator -----
+  // Button / Signal Indicator
   display.setCursor(0, 50);
   display.print("Button: ");
-  display.println(data.ButtonPressed ? "ON" : "OFF");
+  display.println(data.ButtonPressed ? "ON" : "OFF"); //AI cleaned up code
 
   display.print("Signal: ");
-  display.println(signalSent ? "OK" : "FAIL");
+  display.println(signalSent ? "OK" : "FAIL"); //AI cleaned up code
 
   display.display();
 
-  delay(200); // small delay for sensor and OLED
+  delay(200);
 }
+
