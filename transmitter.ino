@@ -91,7 +91,7 @@ void loop() {
   display.println(data.ButtonPressed ? "ON" : "OFF"); //AI cleaned up code
 
   display.print("Signal: ");
-  display.println(signalSent ? "OK" : "FAIL"); //AI cleaned up code
+  display.println(signalSent ? "OK" : "FAIL");
 
   display.display();
 
@@ -100,4 +100,5 @@ void loop() {
 
 //OLED Display Credit: https://www.instructables.com/Monochrome-096-i2c-OLED-display-with-arduino-SSD13/
 //DHT11 Credit: https://docs.oyoclass.com/unoeditor/Libraries/dht/
+
 
