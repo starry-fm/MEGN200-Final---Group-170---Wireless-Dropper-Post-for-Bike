@@ -41,7 +41,7 @@ void setup() {
 
   // Initialize OLED
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
+    Serial.println(F("SSD1306 allocation failed")); //Keep in Flash to conserve RAM
     while (1);
   }
   display.clearDisplay();
@@ -98,3 +98,5 @@ void loop() {
   delay(200);
 }
 
+//OLED Display Credit: https://www.instructables.com/Monochrome-096-i2c-OLED-display-with-arduino-SSD13/
+//DHT11 Credit: https://docs.oyoclass.com/unoeditor/Libraries/dht/
