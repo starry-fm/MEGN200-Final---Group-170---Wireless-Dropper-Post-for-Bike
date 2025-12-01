@@ -76,8 +76,8 @@ void loop() {
   display.clearDisplay();
   
   // --- TEMPERATURE BOX ---
-  display.drawRect(5, 0, 118, 20, SSD1306_WHITE);
-  display.fillRect(6, 1, 116, 18, SSD1306_BLACK);
+  display.drawRect(5, 0, 90, 20, SSD1306_WHITE);  // shorter width
+  display.fillRect(6, 1, 88, 18, SSD1306_BLACK);
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(8, 4);
@@ -88,6 +88,10 @@ void loop() {
     display.print("C");
   }
   
+  // --- SMILEY / SIGNAL NEXT TO TEMP ---
+  display.setCursor(100, 4);  // next to temp box
+  display.print(signalSent ? "^_^" : "x_x");
+  
   // --- CONDITIONS BOX ---
   display.drawRect(5, 22, 118, 20, SSD1306_WHITE);
   display.fillRect(6, 23, 116, 18, SSD1306_BLACK);
@@ -97,17 +101,11 @@ void loop() {
   else display.print(hum > 60 ? "Wet" : "Dry");
   
   // --- DROPPER BOX ---
-  display.drawRect(5, 44, 118, 18, SSD1306_WHITE);  // make this slightly shorter
+  display.drawRect(5, 44, 118, 18, SSD1306_WHITE);
   display.fillRect(6, 45, 116, 16, SSD1306_BLACK);
   display.setCursor(8, 46);
   display.print("Dropper: ");
   display.print(data.ButtonPressed ? "Activated" : "Idle");
-  
-  // --- SIGNAL INDICATOR BELOW BOXES ---
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(8, 62);  // below the last rectangle
-  display.print(signalSent ? "^_^" : "x_x");
   
   display.display();
 
@@ -117,6 +115,7 @@ void loop() {
 
 //OLED Display Credit: https://www.instructables.com/Monochrome-096-i2c-OLED-display-with-arduino-SSD13/
 //DHT11 Credit: https://docs.oyoclass.com/unoeditor/Libraries/dht/
+
 
 
 
