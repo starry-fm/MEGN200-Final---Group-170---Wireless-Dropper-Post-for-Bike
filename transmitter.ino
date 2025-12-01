@@ -74,39 +74,39 @@ void loop() {
 
   // Update OLED
   display.clearDisplay();
-  
-  // --- TEMPERATURE ---
+
+  // --- TEMPERATURE BOX ---
+  display.drawRect(5, 0, 118, 20, SSD1306_WHITE);
   display.setTextSize(2);
-  display.setCursor(0, 0);
+  display.setTextColor(SSD1306_WHITE); // <-- important
+  display.setCursor(8, 2);    
   display.print("Temp: ");
-  if (isnan(temp)) {
-  display.print("Err");
-  } else {
-  display.print(temp, 1);  // one decimal
-  display.print("C");
-  }
-  
-  // --- CONDITIONS ---
+  if (isnan(temp)) { display.print("Err"); }
+  else { display.print(temp, 1); display.print("C"); }
+
+  // --- CONDITIONS BOX ---
+  display.drawRect(5, 22, 118, 20, SSD1306_WHITE);
   display.setTextSize(2);
-  display.setCursor(0, 22);
+  display.setTextColor(SSD1306_WHITE); // <-- important
+  display.setCursor(8, 24);
   display.print("Cond: ");
-  if (isnan(hum)) {
-  display.print("Err");
-  } else {
-  display.print(hum > 60 ? "Wet" : "Dry");
-  }
-  
-  // --- DROPPER ---
+  if (isnan(hum)) { display.print("Err"); }
+  else { display.print(hum > 60 ? "Wet" : "Dry"); }
+
+  // --- DROPPER BOX ---
+  display.drawRect(5, 44, 118, 20, SSD1306_WHITE);
   display.setTextSize(2);
-  display.setCursor(0, 44);
+  display.setTextColor(SSD1306_WHITE); // <-- important
+  display.setCursor(8, 46);
   display.print("Dropper: ");
   display.print(data.ButtonPressed ? "Activated" : "Idle");
-  
+
   // --- SIGNAL INDICATOR ---
   display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE); // <-- important
   display.setCursor(95, 56);
   display.print(signalSent ? "^_^" : "x_x");
-  
+
   display.display();
 
   delay(200);
@@ -114,6 +114,7 @@ void loop() {
 
 //OLED Display Credit: https://www.instructables.com/Monochrome-096-i2c-OLED-display-with-arduino-SSD13/
 //DHT11 Credit: https://docs.oyoclass.com/unoeditor/Libraries/dht/
+
 
 
 
