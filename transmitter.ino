@@ -45,8 +45,6 @@ void setup() {
     while (1);
   }
   display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
 
   // Initialize WiFi as transmitter
   WifiSerial.begin("group170dropper", "dropperYeah", WifiPortType::Transmitter);
@@ -76,22 +74,33 @@ void loop() {
 
   // Update OLED
   display.clearDisplay();
-  display.setCursor(0, 0);
+
+  // --- TEMPERATURE BOX ---
+  display.drawRect(5, 0, 118, 20, SSD1306_WHITE); // x, y, w, h
+  display.setTextSize(2);
+  display.setCursor(8, 0);    
   display.print("Temp: ");
-  if (isnan(temp)) display.print("Err"); else display.print(temp);
-  display.println(" C");
+  if (isnan(temp)) {display.print("Err");}
+  else {display.print(temp);
+  display.println("C");}
 
-  display.print("Humidity: ");
-  if (isnan(hum)) display.print("Err"); else display.print(hum);
-  display.println(" %");
+  // --- CONDITIONS BOX ---
+  display.drawRect(5, 22, 118, 20, SSD1306_WHITE);
+  display.setCursor(8, 22);
+  display.print("Cond: ");
+  if (isnan(hum)) {display.print("Err");}
+  else {display.print(hum > 60 ? "Wet" : "Dry");}
 
-  // Button / Signal Indicator
-  display.setCursor(0, 50);
-  display.print("Button: ");
-  display.println(data.ButtonPressed ? "ON" : "OFF"); //AI cleaned up code
+  // --- DROPPER BOX ---
+  display.drawRect(5, 44, 118, 20, SSD1306_WHITE);
+  display.setCursor(8, 44);
+  display.print("Dropper: ");
+  display.println(data.ButtonPressed ? "Activated" : "Idle");
 
-  display.print("Signal: ");
-  display.println(signalSent ? "OK" : "FAIL");
+  // --- SIGNAL INDICATOR ---
+  display.setTextSize(1);
+  display.setCursor(95, 56);
+  display.print(signalSent ? "^_^" : "x_x");
 
   display.display();
 
@@ -100,5 +109,6 @@ void loop() {
 
 //OLED Display Credit: https://www.instructables.com/Monochrome-096-i2c-OLED-display-with-arduino-SSD13/
 //DHT11 Credit: https://docs.oyoclass.com/unoeditor/Libraries/dht/
+
 
 
