@@ -76,7 +76,7 @@ void loop() {
   display.clearDisplay();
   
   // --- TEMPERATURE BOX ---
-  display.drawRect(5, 0, 90, 20, SSD1306_WHITE);  // shorter width
+  display.drawRect(5, 0, 90, 20, SSD1306_WHITE);
   display.fillRect(6, 1, 88, 18, SSD1306_BLACK);
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -88,7 +88,7 @@ void loop() {
     display.print("C");
   }
   
-  // --- SMILEY / SIGNAL NEXT TO TEMP ---
+  // --- SMILEY FACE ---
   display.setCursor(100, 4);  // next to temp box
   display.print("^_^");
   
@@ -115,6 +115,7 @@ void loop() {
 
 //OLED Display Credit: https://www.instructables.com/Monochrome-096-i2c-OLED-display-with-arduino-SSD13/
 //DHT11 Credit: https://docs.oyoclass.com/unoeditor/Libraries/dht/
+
 
 
 
