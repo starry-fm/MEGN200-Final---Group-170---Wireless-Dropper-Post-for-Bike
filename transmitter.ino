@@ -90,7 +90,7 @@ void loop() {
   
   // --- SMILEY / SIGNAL NEXT TO TEMP ---
   display.setCursor(100, 4);  // next to temp box
-  display.print(signalSent ? "^_^" : "x_x");
+  display.print("^_^");
   
   // --- CONDITIONS BOX ---
   display.drawRect(5, 22, 118, 20, SSD1306_WHITE);
@@ -115,6 +115,7 @@ void loop() {
 
 //OLED Display Credit: https://www.instructables.com/Monochrome-096-i2c-OLED-display-with-arduino-SSD13/
 //DHT11 Credit: https://docs.oyoclass.com/unoeditor/Libraries/dht/
+
 
 
 
