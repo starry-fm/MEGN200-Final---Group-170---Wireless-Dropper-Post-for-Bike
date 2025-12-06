@@ -55,7 +55,7 @@ void loop() {
   data.AnalogCheck = millis();
 
   // Button handling
-  bool buttonState = !digitalRead(buttonPin); // pressed = HIGH, AI cleaned up code here
+  bool buttonState = !digitalRead(buttonPin); // pressed = 1/True
   if (buttonState != lastButtonState) {
     data.ButtonPressed = buttonState;
     lastButtonState = buttonState;
@@ -115,14 +115,3 @@ void loop() {
 
 //OLED Display Credit: https://www.instructables.com/Monochrome-096-i2c-OLED-display-with-arduino-SSD13/
 //DHT11 Credit: https://docs.oyoclass.com/unoeditor/Libraries/dht/
-
-
-
-
-
-
-
-
-
-
-
